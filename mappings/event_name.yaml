@@ -1,0 +1,4 @@
+data_layout:
+  mappings:
+    keep_unmapped: true
+    table_name_template: '{{if eq .event_type .event}}{{.event_type}}{{else}}{{.event}}{{end}}'

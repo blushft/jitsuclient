@@ -1,0 +1,4 @@
+data_layout:
+  mappings:
+    keep_unmapped: true
+    table_name_template: '{{.event_type}}'
