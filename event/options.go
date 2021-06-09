@@ -17,6 +17,7 @@ func TrackingID(id string) Option {
 func UserID(id string) Option {
 	return func(e *Event) {
 		e.UserID = id
+		e.Anonymous = false
 	}
 }
 

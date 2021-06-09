@@ -134,6 +134,13 @@ func (t *Client) run() {
 	for {
 		select {
 		case e := <-t.q:
+			if t.options.Strict {
+				if !e.Validate() {
+					log.Printf("event failed validation")
+					continue
+				}
+			}
+
 			if err := t.store.Set(e); err != nil {
 				log.Printf("error storing event: %s\n", err.Error())
 				continue

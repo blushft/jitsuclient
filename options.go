@@ -13,6 +13,7 @@ type Options struct {
 	S2S           bool
 	ClientHeaders map[string]string
 	Debug         bool
+	Strict        bool
 
 	AppInfo    *contexts.App
 	Platform   string
@@ -72,7 +73,7 @@ func (o Options) apiPath() string {
 }
 
 func (o Options) apiQueryParams() map[string]string {
-	m := make(map[string]string, 0)
+	m := make(map[string]string)
 
 	if !o.S2S {
 		m["token"] = o.ServerKey
@@ -106,6 +107,12 @@ func CollectorURL(u string) Option {
 func Debug() Option {
 	return func(o *Options) {
 		o.Debug = true
+	}
+}
+
+func Strict(b bool) Option {
+	return func(o *Options) {
+		o.Strict = b
 	}
 }
 
