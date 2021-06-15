@@ -31,6 +31,10 @@ type Context interface {
 	Validate() bool
 }
 
+type ContextValidator interface {
+	Validate() bool
+}
+
 type context struct {
 	typ ContextType
 	v   interface{}
@@ -56,6 +60,11 @@ func (ctx *context) Interface() interface{} {
 }
 
 func (ctx *context) Validate() bool {
+	v, ok := ctx.v.(ContextValidator)
+	if ok {
+		return v.Validate()
+	}
+
 	return true
 }
 
