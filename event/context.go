@@ -36,7 +36,7 @@ type context struct {
 	v   interface{}
 }
 
-func newContext(typ ContextType, v interface{}) Context {
+func NewContext(typ ContextType, v interface{}) Context {
 	return &context{
 		typ: typ,
 		v:   v,

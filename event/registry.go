@@ -25,7 +25,7 @@ func RegisterContext(typ ContextType, ctor ContextContructor) {
 func RegisterNewContext(typ string, v interface{}) {
 	ctyp := ContextType(typ)
 	ctor := func() Context {
-		return newContext(ctyp, v)
+		return NewContext(ctyp, v)
 	}
 
 	RegisterContext(ctyp, ctor)
