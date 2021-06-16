@@ -52,7 +52,26 @@ func (ctx context) Type() ContextType {
 }
 
 func (ctx context) Values() map[string]interface{} {
-	return structs.Map(ctx.v)
+	if structs.IsStruct(ctx.v) {
+		s := structs.New(ctx.v)
+		s.TagName = "json"
+
+		return s.Map()
+	}
+
+	switch vv := ctx.v.(type) {
+	case map[string]interface{}:
+		return vv
+	case map[string]string:
+		m := make(map[string]interface{}, len(vv))
+		for k, v := range vv {
+			m[k] = v
+		}
+
+		return m
+	default:
+		return map[string]interface{}{}
+	}
 }
 
 func (ctx *context) Interface() interface{} {
