@@ -22,14 +22,15 @@ type Options struct {
 	QueueBuffer   int
 	FlushInterval time.Duration
 	FlushCount    int
+	MaxRetries    int
 }
 
 func defaultOptions(opts ...Option) Options {
 	options := Options{
 		CollectorURL:  "http://localhost:8001",
 		ClientHeaders: make(map[string]string),
-		QueueBuffer:   25,
-		FlushInterval: time.Second * 10,
+		QueueBuffer:   100,
+		FlushInterval: time.Millisecond * 100,
 		FlushCount:    100,
 	}
 

@@ -169,7 +169,12 @@ func (t *Client) emit() (int, error) {
 
 	i := 0
 	for _, e := range evts {
-		if err := t.send(e.Event); err != nil {
+		rm := false
+
+		if err := t.send(e.Event); err == nil {
+			i++
+			rm = true
+		} else {
 			e.Attempted = true
 			e.Attempts++
 			e.LastAttempt = time.Now()
@@ -178,11 +183,17 @@ func (t *Client) emit() (int, error) {
 				log.Printf("event failed to send: %v", err)
 			}
 
-			if err := t.store.Update(e); err != nil {
-				log.Printf("error updating event: %v", err)
+			if e.Attempts > t.options.MaxRetries {
+				rm = true
+			} else {
+				if err := t.store.Update(e); err != nil {
+					log.Printf("error updating event: %v", err)
+				}
 			}
-		} else {
-			i++
+
+		}
+
+		if rm {
 			if err := t.store.Remove(e); err != nil {
 				log.Printf("error removing event: %v", err)
 			}
