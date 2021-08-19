@@ -183,7 +183,7 @@ func (t *Client) emit() (int, error) {
 				log.Printf("event failed to send: %v", err)
 			}
 
-			if e.Attempts > t.options.MaxRetries {
+			if t.options.MaxRetries > 0 && e.Attempts > t.options.MaxRetries {
 				rm = true
 			} else {
 				if err := t.store.Update(e); err != nil {
