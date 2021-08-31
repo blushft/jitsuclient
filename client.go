@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/blushft/jitsuclient/event"
 	"github.com/blushft/jitsuclient/event/contexts"
 	"github.com/blushft/jitsuclient/event/events"
+	"github.com/davecgh/go-spew/spew"
 
 	"gopkg.in/resty.v1"
 )
@@ -162,6 +164,10 @@ func (t *Client) emit() (int, error) {
 		return 0, nil
 	}
 
+	if t.options.Bulk {
+		return t.emitBulk()
+	}
+
 	evts, err := t.store.GetAll()
 	if err != nil {
 		return 0, err
@@ -169,28 +175,79 @@ func (t *Client) emit() (int, error) {
 
 	i := 0
 	for _, e := range evts {
-		rm := false
+		var rm bool
+		var err error
 
-		if err := t.send(e.Event); err == nil {
+		if serr := t.send(e.Event); serr == nil {
 			i++
 			rm = true
 		} else {
-			e.Attempted = true
-			e.Attempts++
-			e.LastAttempt = time.Now()
-
-			if t.options.Debug {
-				log.Printf("event failed to send: %v", err)
+			rm, err = t.sendFailed(e, serr)
+			if err != nil {
+				log.Println(err.Error())
 			}
+		}
 
-			if t.options.MaxRetries > 0 && e.Attempts > t.options.MaxRetries {
-				rm = true
-			} else {
-				if err := t.store.Update(e); err != nil {
-					log.Printf("error updating event: %v", err)
-				}
+		if rm {
+			if err := t.store.Remove(e); err != nil {
+				log.Printf("error removing event: %v", err)
 			}
+		}
+	}
 
+	return i, nil
+}
+
+func (t *Client) emitBulk() (int, error) {
+	evts, err := t.store.GetAll()
+	if err != nil {
+		return 0, err
+	}
+
+	bulk := make([][]byte, len(evts))
+	for c, e := range evts {
+		bulk[c] = e.Event
+	}
+
+	body := bytes.Join(bulk, []byte("\n"))
+
+	headers := t.options.clientHeaders()
+
+	req := t.httpc.R().
+		SetFileReader("file", "file", bytes.NewReader(body)).
+		SetHeaders(headers).
+		SetQueryParams(t.options.apiQueryParams())
+
+	resp, err := req.Post(t.options.apiPath())
+
+	failed := err != nil || resp.StatusCode() > 299
+	if t.options.Debug {
+		if err != nil {
+			log.Printf("error sending bulk: %v", err)
+		}
+
+		if resp.StatusCode() > 299 {
+			log.Printf("http response: code=%d body=%s", resp.StatusCode(), resp.Body())
+		}
+	}
+
+	if t.options.Debug {
+		spew.Dump(resp)
+	}
+	i := 0
+
+	for _, e := range evts {
+		var rm bool
+		var err error
+
+		if failed {
+			rm, err = t.sendFailed(e, err)
+			if err != nil {
+				log.Println(err.Error())
+			}
+		} else {
+			i++
+			rm = true
 		}
 
 		if rm {
@@ -217,4 +274,30 @@ func (t *Client) send(e []byte) error {
 	}
 
 	return err
+}
+
+func (t *Client) sendBulk() error {
+	return nil
+}
+
+func (t *Client) sendFailed(e *StoreEvent, sendErr error) (bool, error) {
+	rm := false
+
+	e.Attempted = true
+	e.Attempts++
+	e.LastAttempt = time.Now()
+
+	if t.options.Debug {
+		log.Printf("event failed to send: %v", sendErr)
+	}
+
+	if t.options.MaxRetries > 0 && e.Attempts > t.options.MaxRetries {
+		rm = true
+	} else {
+		if err := t.store.Update(e); err != nil {
+			return rm, fmt.Errorf("error updating event: %w", err)
+		}
+	}
+
+	return rm, nil
 }

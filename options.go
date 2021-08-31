@@ -11,6 +11,7 @@ type Options struct {
 	CollectorURL  string
 	ServerKey     string
 	S2S           bool
+	Bulk          bool
 	ClientHeaders map[string]string
 	Debug         bool
 	Strict        bool
@@ -27,10 +28,10 @@ type Options struct {
 
 func defaultOptions(opts ...Option) Options {
 	options := Options{
-		CollectorURL:  "http://localhost:8001",
+		CollectorURL:  "http://localhost:8000",
 		ClientHeaders: make(map[string]string),
 		QueueBuffer:   100,
-		FlushInterval: time.Millisecond * 100,
+		FlushInterval: time.Millisecond * 250,
 		FlushCount:    100,
 	}
 
@@ -66,6 +67,10 @@ func (o Options) EventOptions() []event.Option {
 }
 
 func (o Options) apiPath() string {
+	if o.Bulk {
+		return "/api/v1/events/bulk"
+	}
+
 	if o.S2S {
 		return "/api/v1/s2s/event"
 	}
@@ -85,7 +90,7 @@ func (o Options) apiQueryParams() map[string]string {
 
 func (o Options) clientHeaders() map[string]string {
 	m := map[string]string{
-		"Content-Type": "application/json",
+		"Content-Type": o.apiContentType(),
 	}
 
 	if o.S2S && len(o.ServerKey) > 0 {
@@ -97,6 +102,14 @@ func (o Options) clientHeaders() map[string]string {
 	}
 
 	return m
+}
+
+func (o Options) apiContentType() string {
+	if o.Bulk {
+		return "multipart/form-data"
+	}
+
+	return "application/json"
 }
 
 func CollectorURL(u string) Option {
@@ -138,5 +151,36 @@ func ServerKey(key string) Option {
 func TrackingID(id string) Option {
 	return func(o *Options) {
 		o.TrackingID = id
+	}
+}
+
+func QueueBuffer(buf int) Option {
+	return func(o *Options) {
+		o.QueueBuffer = buf
+	}
+}
+
+func FlushInterval(d time.Duration) Option {
+	return func(o *Options) {
+		o.FlushInterval = d
+	}
+}
+
+func FlushCount(i int) Option {
+	return func(o *Options) {
+		o.FlushCount = i
+	}
+}
+
+func S2S() Option {
+	return func(o *Options) {
+		o.S2S = true
+	}
+}
+
+func Bulk() Option {
+	return func(o *Options) {
+		o.Bulk = true
+		o.S2S = true
 	}
 }

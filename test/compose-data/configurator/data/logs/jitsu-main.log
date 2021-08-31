@@ -1,0 +1,13 @@
+2021-08-31 13:13:40 [INFO]: *** Creating new AppConfig ***
+2021-08-31 13:13:40 [INFO]: Using server.log.path directory: "/home/configurator/data/logs"
+2021-08-31 13:13:40 [INFO]: Initializing redis configuration storage [redis://redis:6379]...
+2021-08-31 13:13:40 [INFO]: Initializing redis authorization storage [redis://redis:6379]...
+2021-08-31 13:13:40 [INFO]: Started server: 0.0.0.0:7000
+2021-08-31 13:26:27 [INFO]: *** Creating new AppConfig ***
+2021-08-31 13:26:27 [INFO]: Using server.log.path directory: "/home/configurator/data/logs"
+2021-08-31 13:26:27 [INFO]: Initializing redis configuration storage [redis://redis:6379]...
+2021-08-31 13:26:27 [INFO]: Initializing redis authorization storage [redis://redis:6379]...
+2021-08-31 13:26:27 [INFO]: Started server: 0.0.0.0:7000
+2021-08-31 13:26:38 [ERROR]: Failed to authenticate with token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA0MTkyNTcsInVzZXJfaWQiOiJ1c2VyLTFlMjJhNzUwLTBjN2YtNGYzMy1hOWM3LTA3OGEwYWRlZTFlYyIsInV1aWQiOiIzYjc2NWEzYS1kMjdlLTQxZWYtYWIzMS1mZGVmODFlMmM1ZjAifQ.EusFutPsphJQUDXIoGfgWuI6zNplbKXlA2RO47pJJMk: Token signature is invalid
+2021-08-31 13:26:38 [ERROR]: [response] "/api/v1/configurations/api_keys?id=facra27eniwyzn2tup9hs9" error: {"message":"You are not authorized: Token signature is invalid","error":""}
+2021-08-31 13:26:38 [ERROR]: [response] "/api/v1/users/token/refresh" error: {"message":"Token signature is invalid","error":""}

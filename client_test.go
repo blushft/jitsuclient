@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blushft/jitsuclient/event"
 	"github.com/blushft/jitsuclient/event/contexts"
 	"github.com/stretchr/testify/suite"
 )
@@ -20,11 +21,13 @@ func TestRunClientSuite(t *testing.T) {
 func (s *ClientSuite) SetupSuite() {
 	tr, err := New(
 		TrackingID("tracker_test"),
-		ServerKey("s2s.3qaiwf2e92fmm3ido942ph.v7878v1hpyiw58j1rttmhs"),
+		ServerKey("s2s.f94blb9erxbasgzmdnnlwq.42ncq1nh3h4t1kz40amjx"),
 		SetAppInfo(&contexts.App{
 			Name:    "tracker_test",
 			Version: "v0.1.0",
-		}))
+		}),
+		Bulk(),
+		Debug())
 
 	s.Require().NoError(err)
 
@@ -47,4 +50,23 @@ func (s *ClientSuite) TestTrackAction() {
 	s.c.Action(a)
 
 	time.Sleep(time.Second * 5)
+}
+
+func (s *ClientSuite) TestBulkEvents() {
+	for i := 0; i < 250; i++ {
+		s.c.Queue(bulkEvent(i))
+	}
+
+	time.Sleep(time.Second * 5)
+}
+
+func bulkEvent(i int) *event.Event {
+	return event.New("bulk_event",
+		event.WithContext(&contexts.Action{
+			Category: "current_test",
+			Action:   "Bulk Load",
+			Label:    "test_bulk",
+			Property: "value",
+			Value:    i,
+		}))
 }
