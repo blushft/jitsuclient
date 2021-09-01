@@ -9,7 +9,6 @@ import (
 	"github.com/blushft/jitsuclient/event"
 	"github.com/blushft/jitsuclient/event/contexts"
 	"github.com/blushft/jitsuclient/event/events"
-	"github.com/davecgh/go-spew/spew"
 
 	"gopkg.in/resty.v1"
 )
@@ -199,6 +198,8 @@ func (t *Client) emit() (int, error) {
 }
 
 func (t *Client) emitBulk() (int, error) {
+	start := time.Now()
+
 	evts, err := t.store.GetAll()
 	if err != nil {
 		return 0, err
@@ -231,9 +232,8 @@ func (t *Client) emitBulk() (int, error) {
 		}
 	}
 
-	if t.options.Debug {
-		spew.Dump(resp)
-	}
+	t.logDebug("bulk send complete: dur=%dms", time.Since(start).Milliseconds())
+
 	i := 0
 
 	for _, e := range evts {
@@ -261,6 +261,7 @@ func (t *Client) emitBulk() (int, error) {
 }
 
 func (t *Client) send(e []byte) error {
+	start := time.Now()
 	headers := t.options.clientHeaders()
 
 	resp, err := t.httpc.R().
@@ -273,11 +274,9 @@ func (t *Client) send(e []byte) error {
 		return fmt.Errorf("send failed with status code %d", resp.StatusCode())
 	}
 
-	return err
-}
+	t.logDebug("event send complete: dur=%dms", time.Since(start).Milliseconds())
 
-func (t *Client) sendBulk() error {
-	return nil
+	return err
 }
 
 func (t *Client) sendFailed(e *StoreEvent, sendErr error) (bool, error) {
@@ -300,4 +299,11 @@ func (t *Client) sendFailed(e *StoreEvent, sendErr error) (bool, error) {
 	}
 
 	return rm, nil
+}
+
+func (c *Client) logDebug(msg string, args ...interface{}) {
+	if c.options.Debug {
+		log.Printf(msg, args...)
+	}
+
 }
