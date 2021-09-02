@@ -11,3 +11,11 @@
 2021-08-31 13:26:38 [ERROR]: Failed to authenticate with token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA0MTkyNTcsInVzZXJfaWQiOiJ1c2VyLTFlMjJhNzUwLTBjN2YtNGYzMy1hOWM3LTA3OGEwYWRlZTFlYyIsInV1aWQiOiIzYjc2NWEzYS1kMjdlLTQxZWYtYWIzMS1mZGVmODFlMmM1ZjAifQ.EusFutPsphJQUDXIoGfgWuI6zNplbKXlA2RO47pJJMk: Token signature is invalid
 2021-08-31 13:26:38 [ERROR]: [response] "/api/v1/configurations/api_keys?id=facra27eniwyzn2tup9hs9" error: {"message":"You are not authorized: Token signature is invalid","error":""}
 2021-08-31 13:26:38 [ERROR]: [response] "/api/v1/users/token/refresh" error: {"message":"Token signature is invalid","error":""}
+2021-09-02 03:21:34 [INFO]: *** Creating new AppConfig ***
+2021-09-02 03:21:34 [INFO]: Using server.log.path directory: "/home/configurator/data/logs"
+2021-09-02 03:21:34 [INFO]: Initializing redis configuration storage [redis://redis:6379]...
+2021-09-02 03:21:34 [INFO]: Initializing redis authorization storage [redis://redis:6379]...
+2021-09-02 03:21:34 [INFO]: Started server: 0.0.0.0:7000
+2021-09-02 03:23:08 [ERROR]: Failed to authenticate with token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA0MjAwMjMsInVzZXJfaWQiOiJ1c2VyLTU3MjRmNmM3LTA5MTItNDlhZC05ZTFhLTgwYTM1ZDkxMTM3OSIsInV1aWQiOiI1YmNmZmE1NS04YjU5LTQ3NjMtYjgxNC04NjMwNzg0ZmMyZWQifQ.KcflzD4sZAcx2WOot1qv2MWWtuYFadzsWddozMSZmmo: Token verification error: signature is invalid
+2021-09-02 03:23:08 [ERROR]: [response] "/api/v1/users/info" error: {"message":"You are not authorized: Token verification error: signature is invalid","error":""}
+2021-09-02 03:23:08 [ERROR]: [response] "/api/v1/users/token/refresh" error: {"message":"Token signature is invalid","error":""}

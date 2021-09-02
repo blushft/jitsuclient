@@ -116,3 +116,54 @@
 2021-08-31 13:28:46 [INFO]: ✅ New resource [destinations] has been loaded
 2021-08-31 13:28:46 [INFO]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] destination has been initialized!
 2021-08-31 14:01:45 [INFO]: 🤖 * Server is shutting down.. *
+2021-09-02 03:21:38 [INFO]:                                                                                                     
+         ╭────────────────────────────────────────────────────────────────────────────────╮         
+         │                                                                                │         
+         │                        Welcome to Jitsu Server v1.35.0!                        │         
+         │                                                                                │         
+         │              🚀 Jitsu is an open-source data collection platform               │         
+         │                                                                                │         
+         │     📚 Documentation:              │  https://jitsu.com/docs                   │         
+         │     ─────────────────              │  ──────────────────────                   │         
+         │     🌎 Website:                    │  https://jitsu.com                        │         
+         │     ───────────                    │  ─────────────────                        │         
+         │     🌟 Github:                     │  https://github.com/jitsucom/jitsu        │         
+         │     ──────────                     │  ─────────────────────────────────        │         
+         │     💪 Follow us on twitter:       │  https://twitter.com/jitsucom             │         
+         │     ────────────────────────       │  ────────────────────────────             │         
+         │     💬 Join our Slack:             │  https://jitsu.com/slack                  │         
+         │     ──────────────────             │  ───────────────────────                  │         
+         │                                                                                │         
+         ╰────────────────────────────────────────────────────────────────────────────────╯         
+                                                                                                    
+                                                                                                    
+2021-09-02 03:21:38 [INFO]: 📂 Using server.log.path directory: "/home/eventnative/data/logs"
+2021-09-02 03:21:38 [INFO]: 🚀 Starting Jitsu Server. Server name: jitsu
+2021-09-02 03:21:38 [INFO]: 💻 Server public url will be taken from Host header
+2021-09-02 03:21:38 [INFO]: 🔄 Resource [authorization] will be loaded every 3 seconds
+2021-09-02 03:21:38 [INFO]: ✅ New resource [authorization] has been loaded
+2021-09-02 03:21:38 [INFO]: ❌ Geo resolution won't be available as geo.maxmind_path is not set
+2021-09-02 03:21:38 [INFO]: 🔄 Resource [Jitsu-Server] will be loaded every 20 seconds
+2021-09-02 03:21:38 [INFO]: ✅ New resource [Jitsu-Server] has been loaded
+2021-09-02 03:21:38 [INFO]: ❌ Prometheus metrics reporting is not enable. Read how to enable them: https://jitsu.com/docs/other-features/application-metrics
+2021-09-02 03:21:38 [INFO]: 📂 Create log.path directory: "/home/eventnative/data/logs/events"
+2021-09-02 03:21:38 [INFO]: 🏪 Initializing meta storage redis [redis://redis:6379]...
+2021-09-02 03:21:38 [INFO]: ❌ Coordination service isn't provided. Jitsu server is working in single-node mode. 
+	Read about scaling Jitsu to multiple nodes: https://jitsu.com/docs/other-features/scaling-eventnative
+2021-09-02 03:21:38 [INFO]: 📝 Limit server.max_columns is 100
+2021-09-02 03:21:38 [INFO]: 🔄 Resource [destinations] will be loaded every 5 seconds
+2021-09-02 03:21:38 [INFO]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] initializing destination of type: postgres in mode: stream
+2021-09-02 03:21:38 [INFO]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] has primary key fields: [eventn_ctx_event_id]
+2021-09-02 03:21:38 [WARN]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] doesn't have enrichment rules
+2021-09-02 03:21:38 [WARN]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] doesn't have mapping rules
+2021-09-02 03:21:38 [INFO]: ✅ New resource [destinations] has been loaded
+2021-09-02 03:21:38 [INFO]: 🔄 Resource [sources] will be loaded every 7 seconds
+2021-09-02 03:21:38 [INFO]: Sources are empty
+2021-09-02 03:21:38 [INFO]: ✅ New resource [sources] has been loaded
+2021-09-02 03:21:38 [INFO]: 🔄 Resource [system] will be loaded every 5 seconds
+2021-09-02 03:21:38 [INFO]: [f94blb9erxbasgzmdnnlwq.lyu8lkihfxlmciboxbp7] destination has been initialized!
+2021-09-02 03:21:38 [INFO]: ✅ New resource [system] has been loaded
+2021-09-02 03:21:38 [INFO]: 📄 Serve static file: /inline.js
+2021-09-02 03:21:38 [INFO]: 📄 Serve static file: /lib.js
+2021-09-02 03:21:38 [INFO]: 📄 Serve static file: /track.js
+2021-09-02 03:21:38 [INFO]: 🚀 Started server: 0.0.0.0:8001

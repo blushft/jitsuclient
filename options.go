@@ -7,6 +7,10 @@ import (
 	"github.com/blushft/jitsuclient/event/contexts"
 )
 
+const (
+	minInterval = time.Millisecond * 100
+)
+
 type Options struct {
 	CollectorURL  string
 	ServerKey     string
@@ -31,12 +35,16 @@ func defaultOptions(opts ...Option) Options {
 		CollectorURL:  "http://localhost:8000",
 		ClientHeaders: make(map[string]string),
 		QueueBuffer:   100,
-		FlushInterval: time.Millisecond * 250,
-		FlushCount:    100,
+		FlushInterval: time.Second * 1,
+		FlushCount:    250,
 	}
 
 	for _, o := range opts {
 		o(&options)
+	}
+
+	if options.FlushInterval < minInterval {
+		options.FlushInterval = minInterval
 	}
 
 	return options
@@ -182,5 +190,6 @@ func Bulk() Option {
 	return func(o *Options) {
 		o.Bulk = true
 		o.S2S = true
+		o.FlushInterval = time.Second * 2
 	}
 }

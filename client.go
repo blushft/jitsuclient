@@ -9,6 +9,7 @@ import (
 	"github.com/blushft/jitsuclient/event"
 	"github.com/blushft/jitsuclient/event/contexts"
 	"github.com/blushft/jitsuclient/event/events"
+	"github.com/hashicorp/go-multierror"
 
 	"gopkg.in/resty.v1"
 )
@@ -103,13 +104,14 @@ func (t *Client) Timing(te *contexts.Timing, opts ...event.Option) {
 }
 
 func (t *Client) Flush() {
+	start := time.Now()
 	c, err := t.emit()
 	if err != nil {
 		log.Printf("error emitting events: %v\n", err)
 	}
 
 	if c > 0 && t.options.Debug {
-		log.Printf("emitted %d events", c)
+		log.Printf("flush complete. count=%d dur=%dms", c, time.Since(start).Milliseconds())
 	}
 }
 
@@ -148,9 +150,11 @@ func (t *Client) run() {
 			}
 
 			if t.store.Count() >= t.options.FlushCount {
+				t.logDebug("flushing events on flush count")
 				t.Flush()
 			}
 		case <-tick.C:
+			t.logDebug("flushing events on interval")
 			t.Flush()
 		case <-t.cl:
 			return
@@ -158,13 +162,18 @@ func (t *Client) run() {
 	}
 }
 
+type errorHandler func(*StoreEvent, error) error
+type eventSender func([]*StoreEvent, errorHandler) (int, error)
+
 func (t *Client) emit() (int, error) {
 	if t.store.Count() == 0 {
 		return 0, nil
 	}
 
+	start := time.Now()
+	send := t.sendEach
 	if t.options.Bulk {
-		return t.emitBulk()
+		send = t.sendAll
 	}
 
 	evts, err := t.store.GetAll()
@@ -172,96 +181,84 @@ func (t *Client) emit() (int, error) {
 		return 0, err
 	}
 
-	i := 0
-	for _, e := range evts {
-		var rm bool
-		var err error
-
-		if serr := t.send(e.Event); serr == nil {
-			i++
-			rm = true
-		} else {
-			rm, err = t.sendFailed(e, serr)
-			if err != nil {
-				log.Println(err.Error())
-			}
-		}
-
-		if rm {
-			if err := t.store.Remove(e); err != nil {
-				log.Printf("error removing event: %v", err)
-			}
-		}
+	i, err := send(evts, t.handleSendFailed)
+	if err != nil {
+		return i, err
 	}
+
+	t.logDebug("emitted %d events in %dms", i, time.Since(start).Milliseconds())
 
 	return i, nil
 }
 
-func (t *Client) emitBulk() (int, error) {
+func (t *Client) sendEach(evts []*StoreEvent, h errorHandler) (int, error) {
 	start := time.Now()
+	i := 0
 
-	evts, err := t.store.GetAll()
-	if err != nil {
-		return 0, err
+	for _, e := range evts {
+		if serr := t.send(e.Event); serr != nil {
+			if err := h(e, serr); err != nil {
+				log.Println(err.Error())
+			}
+
+			continue
+		}
+
+		i++
+
+		if err := t.store.Remove(e); err != nil {
+			log.Printf("error removing event: %v", err)
+		}
 	}
+
+	t.logDebug("send complete: events=%d dur=%dms", i, time.Since(start).Milliseconds())
+
+	return i, nil
+}
+
+func (t *Client) sendAll(evts []*StoreEvent, h errorHandler) (int, error) {
+	start := time.Now()
 
 	bulk := make([][]byte, len(evts))
 	for c, e := range evts {
 		bulk[c] = e.Event
 	}
 
-	body := bytes.Join(bulk, []byte("\n"))
-
-	headers := t.options.clientHeaders()
-
-	req := t.httpc.R().
-		SetFileReader("file", "file", bytes.NewReader(body)).
-		SetHeaders(headers).
-		SetQueryParams(t.options.apiQueryParams())
-
-	resp, err := req.Post(t.options.apiPath())
-
-	failed := err != nil || resp.StatusCode() > 299
-	if t.options.Debug {
-		if err != nil {
-			log.Printf("error sending bulk: %v", err)
+	onFail := func(evts []*StoreEvent, serr error) error {
+		var res error
+		for _, e := range evts {
+			if err := h(e, serr); err != nil {
+				res = multierror.Append(res, err)
+			}
 		}
 
-		if resp.StatusCode() > 299 {
-			log.Printf("http response: code=%d body=%s", resp.StatusCode(), resp.Body())
-		}
+		return res
 	}
 
-	t.logDebug("bulk send complete: dur=%dms", time.Since(start).Milliseconds())
+	req := bytes.Join(bulk, []byte("\n"))
+	if err := t.sendBulk(req); err != nil {
+		log.Printf("bulk send failed with error: %v", err)
+		if ferr := onFail(evts, err); ferr != nil {
+			return 0, ferr
+		}
+
+		return 0, err
+	}
 
 	i := 0
-
 	for _, e := range evts {
-		var rm bool
-		var err error
-
-		if failed {
-			rm, err = t.sendFailed(e, err)
-			if err != nil {
-				log.Println(err.Error())
-			}
-		} else {
-			i++
-			rm = true
+		if err := t.store.Remove(e); err != nil {
+			log.Printf("error removing event: %v", err)
 		}
-
-		if rm {
-			if err := t.store.Remove(e); err != nil {
-				log.Printf("error removing event: %v", err)
-			}
-		}
+		i++
 	}
+
+	t.logDebug("bulk send complete: count=%d dur=%dms", i, time.Since(start).Milliseconds())
 
 	return i, nil
 }
 
 func (t *Client) send(e []byte) error {
-	start := time.Now()
 	headers := t.options.clientHeaders()
 
 	resp, err := t.httpc.R().
@@ -269,40 +266,59 @@ func (t *Client) send(e []byte) error {
 		SetHeaders(headers).
 		SetQueryParams(t.options.apiQueryParams()).
 		Post(t.options.apiPath())
-
-	if resp.StatusCode() > 299 {
-		return fmt.Errorf("send failed with status code %d", resp.StatusCode())
+	if err != nil {
+		return err
 	}
 
-	t.logDebug("event send complete: dur=%dms", time.Since(start).Milliseconds())
+	if resp != nil && resp.StatusCode() > 299 {
+		return fmt.Errorf("send failed with status code %d", resp.StatusCode())
+	}
 
 	return err
 }
 
-func (t *Client) sendFailed(e *StoreEvent, sendErr error) (bool, error) {
-	rm := false
+func (t *Client) sendBulk(e []byte) error {
+	headers := t.options.clientHeaders()
 
+	resp, err := t.httpc.R().
+		SetFileReader("file", "file", bytes.NewReader(e)).
+		SetHeaders(headers).
+		SetQueryParams(t.options.apiQueryParams()).
+		Post(t.options.apiPath())
+	if err != nil {
+		return err
+	}
+
+	if resp != nil && resp.StatusCode() > 299 {
+		return fmt.Errorf("bulk send failed with status code %d", resp.StatusCode())
+	}
+
+	return nil
+}
+
+func (t *Client) handleSendFailed(e *StoreEvent, sendErr error) error {
 	e.Attempted = true
 	e.Attempts++
 	e.LastAttempt = time.Now()
 
-	if t.options.Debug {
-		log.Printf("event failed to send: %v", sendErr)
-	}
+	t.logDebug("event failed to send: %v", sendErr)
 
 	if t.options.MaxRetries > 0 && e.Attempts > t.options.MaxRetries {
-		rm = true
+		t.logDebug("max retries reached for event, removing")
+		if err := t.store.Remove(e); err != nil {
+			log.Printf("error removing event: %v", err)
+		}
 	} else {
 		if err := t.store.Update(e); err != nil {
-			return rm, fmt.Errorf("error updating event: %w", err)
+			return fmt.Errorf("error updating event: %w", err)
 		}
 	}
 
-	return rm, nil
+	return nil
 }
 
-func (c *Client) logDebug(msg string, args ...interface{}) {
-	if c.options.Debug {
+func (t *Client) logDebug(msg string, args ...interface{}) {
+	if t.options.Debug {
 		log.Printf(msg, args...)
 	}
 

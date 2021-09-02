@@ -27,6 +27,7 @@ func (s *ClientSuite) SetupSuite() {
 			Version: "v0.1.0",
 		}),
 		Bulk(),
+		FlushInterval(time.Second*1),
 		Debug())
 
 	s.Require().NoError(err)
@@ -53,11 +54,11 @@ func (s *ClientSuite) TestTrackAction() {
 }
 
 func (s *ClientSuite) TestBulkEvents() {
-	for i := 0; i < 250; i++ {
+	for i := 0; i < 5000; i++ {
 		s.c.Queue(bulkEvent(i))
 	}
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 15)
 }
 
 func bulkEvent(i int) *event.Event {
