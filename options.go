@@ -37,6 +37,7 @@ func defaultOptions(opts ...Option) Options {
 		QueueBuffer:   100,
 		FlushInterval: time.Second * 1,
 		FlushCount:    250,
+		MaxRetries:    10,
 	}
 
 	for _, o := range opts {
@@ -191,5 +192,11 @@ func Bulk() Option {
 		o.Bulk = true
 		o.S2S = true
 		o.FlushInterval = time.Second * 2
+	}
+}
+
+func MaxRetries(i int) Option {
+	return func(o *Options) {
+		o.MaxRetries = i
 	}
 }

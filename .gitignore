@@ -1,6 +1,9 @@
-test/compose-data/configurator/data/logs
+test/compose-data/configurator/data/logs/*
 test/compose-data/redis/data/*
 !test/compose-data/redis/data/.gitkeep
-test/compose-data/server/data/events
+test/compose-data/server/data/events/*
 test/compose-data/server/data/logs
 test/compose-data/server/data/venv
+
+*.rdb
+*.log
