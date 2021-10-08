@@ -236,6 +236,8 @@ func (t *Client) sendAll(evts []*StoreEvent, h errorHandler) (int, error) {
 	}
 
 	req := bytes.Join(bulk, []byte("\n"))
+	req = append(req, '\n') 
+
 	if err := t.sendBulk(req); err != nil {
 		log.Printf("bulk send failed with error: %v", err)
 		if ferr := onFail(evts, err); ferr != nil {
